@@ -12,11 +12,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          # 重要：需要获取所有历史记录，以便 git push 能成功
-          fetch-depth: 0
-          # 使用 PAT token 以解决权限问题（如果之前遇到的话）
-          # token: ${{ secrets.PAT }} # 如果需要，取消此行注释并在仓库设置中添加 PAT
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -26,7 +21,7 @@ jobs:
       - name: Install Obfuscator
         run: npm install javascript-obfuscator
 
-      - name: Obfuscate from local source file (Recommended Strength, No Domain Lock)
+      - name: Obfuscate from local source file
         run: |
           node -e "
             const JavaScriptObfuscator = require('javascript-obfuscator');
@@ -49,24 +44,22 @@ jobs:
               process.exit(1);
             }
 
-            // --- 中等强度混淆配置 (稳定、强大、无域名锁定) ---
+            // --- 更安全的混淆配置 ---
             const obfuscationOptions = {
-                compact: true,
-                controlFlowFlattening: true, // 【已启用】打乱控制流
-                controlFlowFlatteningThreshold: 1, // 阈值设为1，对所有代码生效
-                deadCodeInjection: false, // 【已禁用】避免注入代码导致变量冲突
-                stringArray: true,
-                stringArrayEncoding: ['rc4'], // 使用比 base64 更强的 RC4 编码
-                stringArrayThreshold: 0.75,
-                renameGlobals: false, // 【已禁用】避免重命名全局变量
-                identifierNamesGenerator: 'mangled',
-                numbersToExpressions: true,
-                splitStrings: true,
-                splitStringsChunkLength: 5, // 缩短分块长度，增加破解难度
-                transformObjectKeys: true, // 【已启用】混淆对象键
-                selfDefending: true, // 【已启用】防止代码被调试和格式化
+                compact: true, // 压缩代码
+                controlFlowFlattening: false, // 【已禁用】这是导致错误的主要选项之一
+                deadCodeInjection: false, // 【已禁用】这是导致错误的主要选项之一
+                stringArray: true, // 启用字符串数组
+                stringArrayEncoding: ['base64'], // 对字符串数组进行 Base64 编码
+                stringArrayThreshold: 0.75, // 字符串数组编码的阈值
+                renameGlobals: false, // 【已禁用】这是导致错误的主要选项之一
+                identifierNamesGenerator: 'mangled', // 标识符名称生成器
+                numbersToExpressions: true, // 将数字转换为表达式
+                splitStrings: true, // 分割字符串
+                splitStringsChunkLength: 10, // 分割字符串的块长度
+                transformObjectKeys: false, // 【已禁用】这是导致错误的主要选项之一
+                selfDefending: false,
                 debugProtection: false
-                // domainLock 已被移除
             };
 
             const obfuscatedCode = JavaScriptObfuscator.obfuscate(originalCode, obfuscationOptions).getObfuscatedCode();
@@ -83,6 +76,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit, the obfuscated file is already up-to-date."
           else
-            git commit -m "build: Generate and obfuscate worker script (no domain lock)"
+            git commit -m "build: Generate and obfuscate worker script"
             git push
           fi
