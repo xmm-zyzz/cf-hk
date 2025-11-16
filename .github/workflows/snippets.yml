@@ -26,7 +26,7 @@ jobs:
       - name: Install Obfuscator
         run: npm install javascript-obfuscator
 
-      - name: Obfuscate from local source file (High Strength)
+      - name: Obfuscate from local source file (Recommended Strength)
         run: |
           node -e "
             const JavaScriptObfuscator = require('javascript-obfuscator');
@@ -49,23 +49,22 @@ jobs:
               process.exit(1);
             }
 
-            // --- 高强度混淆配置 (高风险) ---
+            // --- 中等强度混淆配置 (稳定且强大) ---
             const obfuscationOptions = {
                 compact: true,
-                controlFlowFlattening: true,
-                controlFlowFlatteningThreshold: 1,
-                deadCodeInjection: true, // 【已启用】高风险选项
-                deadCodeInjectionThreshold: 0.1, // 【关键】设置极低阈值以减少冲突
+                controlFlowFlattening: true, // 【已启用】打乱控制流
+                controlFlowFlatteningThreshold: 1, // 阈值设为1，对所有代码生效
+                deadCodeInjection: false, // 【已禁用】避免注入代码导致变量冲突
                 stringArray: true,
-                stringArrayEncoding: ['rc4'], // 使用 RC4 编码
+                stringArrayEncoding: ['rc4'], // 使用比 base64 更强的 RC4 编码
                 stringArrayThreshold: 0.75,
-                renameGlobals: false, // 【绝对不要启用】
+                renameGlobals: false, // 【已禁用】避免重命名全局变量
                 identifierNamesGenerator: 'mangled',
                 numbersToExpressions: true,
                 splitStrings: true,
-                splitStringsChunkLength: 5, // 更短的分割块
-                transformObjectKeys: true, // 【已启用】
-                selfDefending: true, // 【已启用】
+                splitStringsChunkLength: 5, // 缩短分块长度，增加破解难度
+                transformObjectKeys: true, // 【已启用】混淆对象键
+                selfDefending: true, // 【已启用】防止代码被调试和格式化
                 debugProtection: false,
                 // 【必须修改】请替换为您的实际域名
                 domainLock: ['your-domain.com'] 
@@ -85,6 +84,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit, the obfuscated file is already up-to-date."
           else
-            git commit -m "build: Generate and obfuscate worker script (high strength)"
+            git commit -m "build: Generate and obfuscate worker script (recommended strength)"
             git push
           fi
