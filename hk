@@ -97,7 +97,7 @@ async function fetchECHConfig(domain) {
                         const dataStr = typeof answer.data === 'string' ? answer.data : JSON.stringify(answer.data);
                         const echMatch = dataStr.match(/ech=([^\s"']+)/);
                         if (echMatch && echMatch[1]) {
-                            echDebugInfo = debugSteps.join('\\n') + '\\n✅ Google DNS 获取 ECH 配置';
+                            echDebugInfo = debugSteps.join('\\n') + '\\n✅ Google DNS ECH ';
                             return echMatch[1];
                         }
                     }
@@ -105,7 +105,7 @@ async function fetchECHConfig(domain) {
             }
         }
         
-        debugSteps.push('Cloudflare DNS 作为备选...');
+        debugSteps.push('Cloudflare DNS Beixuan...');
         const cfEchUrl = `https://cloudflare-dns.com/dns-query?name=cloudflare-ech.com&type=65`;
         const cfResponse = await fetch(cfEchUrl, {
             headers: {
@@ -123,7 +123,7 @@ async function fetchECHConfig(domain) {
                     if (answer.data) {
                         const echMatch = answer.data.match(/ech=([^\s"']+)/);
                         if (echMatch && echMatch[1]) {
-                            echDebugInfo = debugSteps.join('\\n') + '\\n✅  Cloudflare DNS 获取 ECH 配置';
+                            echDebugInfo = debugSteps.join('\\n') + '\\n✅  Cloudflare DNS huoqu ECH peizhi';
                             return echMatch[1];
                         }
                     }
@@ -131,7 +131,7 @@ async function fetchECHConfig(domain) {
             }
         }
             
-        echDebugInfo = debugSteps.join('\\n') + '\\n❌ 未获取到ECH配置';
+        echDebugInfo = debugSteps.join('\\n') + '\\n❌ NO ECH peizhi';
         return null;
     } catch (error) {
         echDebugInfo = debugSteps.join('\\n') + '\\n❌ ECH Error: ' + error.message;
@@ -174,7 +174,6 @@ async function handleSubscriptionRequest(request, uuid) {
         echConfig = await fetchECHConfig(workerDomain);
     }
 
-    // 注意：这里已经移除了 nativeList 的生成代码，因此不会再输出“原”节点
 
     const domainList = directDomains.map(d => ({ ip: d.domain, isp: d.name || d.domain }));
     finalLinks.push(...generateLinksFromSource(domainList, uuid, workerDomain, echConfig));
